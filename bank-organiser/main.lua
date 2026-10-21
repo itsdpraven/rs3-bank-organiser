@@ -8,10 +8,11 @@
 --                      clearly belong in another of them.
 -- It works one tab at a time: every item to move glows green on your bank,
 -- numbered in the order to drag them, the tab to drop them on is boxed in
--- green (or the "+" button, to start a new tab), and a banner on the bank
+-- yellow (or the "+" button, to start a new tab), and a banner on the bank
 -- says what to do. Then it sorts each tab: drag the green item onto the
--- blue one to swap them. You drag; the plugin keeps count. Tabs can be
--- locked so they're left alone.
+-- yellow one to swap them. Green is always "drag", yellow "drop here" and
+-- blue "click". You drag; the plugin keeps count. Tabs can be locked so
+-- they're left alone.
 -- The plugin never moves items itself - plugins aren't allowed to act for you.
 --
 -- File overview:
@@ -297,12 +298,12 @@ local function showMoveStep(plan, step, stepIndex, addButton, badges, rows, rati
         local name = plan.report[step.bankTab].name
         banner = string.format("Drag the %s onto tab %d (%s), in number order", plural(n, "green item"),
             range.display, name)
-        message = string.format("Drag each green item onto the green tab: tab %d, your %s tab. "
+        message = string.format("Drag each green item onto the yellow tab: tab %d, your %s tab. "
             .. "Going in number order keeps the tab sorted.", range.display, name)
     else
         local iconName = step.icon and step.icon.name or "green item 1"
-        banner = string.format("New %s tab: drag item 1 (%s) onto the green +", step.label, iconName)
-        message = string.format("Start your %s tab: drag green item 1 (%s) onto the green + so it becomes the "
+        banner = string.format("New %s tab: drag item 1 (%s) onto the yellow +", step.label, iconName)
+        message = string.format("Start your %s tab: drag green item 1 (%s) onto the yellow + so it becomes the "
             .. "tab's icon, then the rest onto the new tab in number order.", step.label, iconName)
     end
     overlay.show({ items = highlights, target = target, badges = badges, banner = banner })
@@ -315,16 +316,16 @@ local function showMoveStep(plan, step, stepIndex, addButton, badges, rows, rati
 end
 
 -- Guidance for moving one tab into its place in the tab bar (step from
--- guide.orderStep): drag the green tab onto the blue one.
+-- guide.orderStep): drag the green tab onto the yellow one.
 local function showOrderStep(plan, step, badges, rows)
     local from, to = state.ranges[step.from], state.ranges[step.to]
     local name = plan.report[step.from].name
-    overlay.show({ target = from.component, openTab = to.component, badges = badges,
+    overlay.show({ dragTab = from.component, target = to.component, badges = badges,
         banner = string.format("Tab order: drag tab %d (%s) onto tab %d (%s left)", from.display, name, to.display,
             plural(step.movesLeft, "move")) })
     panel.update({
         message = string.format("Everything is in the right tab. Now put the tabs in order: drag tab %d (%s, green) "
-            .. "onto tab %d (blue).", from.display, name, to.display),
+            .. "onto tab %d (yellow).", from.display, name, to.display),
         detail = string.format("%s left to put the tabs in order", plural(step.movesLeft, "move")),
         ratio = 1, canSkip = true,
     }, rows)
@@ -336,17 +337,21 @@ local function showSortStep(plan, step, badges, rows)
     local ratio = state.sortStartTotal > 0 and (1 - step.swapsTotal / state.sortStartTotal) or 1
     local range = state.ranges[step.bankTab]
     local name = plan.report[step.bankTab].name
+    local isIcon = plan.tabIcon and plan.tabIcon[step.bankTab] == step.from
+    local iconsOnly = step.key:find("^icon:") ~= nil
     overlay.show({ items = { { slot = step.from.slot, id = step.from.id } },
         swapTo = { slot = step.to.slot, id = step.to.id }, badges = badges,
-        banner = string.format("Sorting tab %d: drag the green item onto the blue one (%s left)", range.display,
+        banner = isIcon and string.format("Tab %d's icon: drag %s (green) onto the first item (yellow)",
+            range.display, step.from.name)
+            or string.format("Sorting tab %d: drag the green item onto the yellow one (%s left)", range.display,
             plural(step.swapsLeft, "swap")) })
-    local isIcon = plan.tabIcon and plan.tabIcon[step.bankTab] == step.from
     panel.update({
-        message = isIcon and string.format("Make %s the icon of tab %d (%s): drag it (green) onto the blue %s, the "
-            .. "tab's first item.", step.from.name, range.display, name, step.to.name)
-            or string.format("Now putting tab %d (%s) in order: drag the green %s onto the blue %s to swap them.",
+        message = isIcon and string.format("Make %s the icon of tab %d (%s): drag it (green) onto the yellow %s, the "
+            .. "tab's first item, to swap them.", step.from.name, range.display, name, step.to.name)
+            or string.format("Now putting tab %d (%s) in order: drag the green %s onto the yellow %s to swap them.",
             range.display, name, step.from.name, step.to.name),
-        detail = string.format("%s left in this tab, %d in all", plural(step.swapsLeft, "swap"), step.swapsTotal),
+        detail = iconsOnly and string.format("%s to fix first", plural(step.swapsTotal, "tab icon"))
+            or string.format("%s left in this tab, %d in all", plural(step.swapsLeft, "swap"), step.swapsTotal),
         ratio = ratio, canSkip = true,
     }, rows)
 end
@@ -382,6 +387,13 @@ local function showTabFocus(plan, items, t, locked, addButton, badges, rows)
         return
     end
 
+    -- First make the planned icon the tab's first item, if it's in the tab.
+    local iconFix = guide.iconStep(items, state.ranges, plan, locked, {}, t)
+    if iconFix then
+        showSortStep(plan, iconFix, badges, rows)
+        return
+    end
+
     local dest, here, totalOut = guide.tabOutgoing(plan, state.ranges, t)
     if dest then
         local target = dest.bankTab and state.ranges[dest.bankTab].component or addButton
@@ -397,11 +409,11 @@ local function showTabFocus(plan, items, t, locked, addButton, badges, rows)
         end
         local where = dest.bankTab
             and string.format("tab %d (%s)", state.ranges[dest.bankTab].display, plan.report[dest.bankTab].name)
-            or string.format("a new %s tab (the green +)", dest.label)
+            or string.format("a new %s tab (the yellow +)", dest.label)
         overlay.show({ items = highlights, target = target, badges = badges,
             banner = string.format("Tab %d: drag the %s onto %s", range.display, plural(#here, "green item"), where) })
         panel.update({
-            message = string.format("Tidying tab %d (%s). The green items belong in %s: drag them onto the green "
+            message = string.format("Tidying tab %d (%s). The green items belong in %s: drag them onto the yellow "
                 .. "box, in number order.", range.display, name, where),
             detail = string.format("%s to move out of this tab", plural(totalOut, "item")),
             ratio = 0,
@@ -460,11 +472,16 @@ local function refresh()
         or guide.planTidy(items, state.ranges, settings.data, locked)
     state.startTotal = math.max(state.startTotal, plan.toMoveTotal)
     local ratio = state.startTotal > 0 and (1 - plan.toMoveTotal / state.startTotal) or 1
+    -- First, tabs whose planned icon is in them but not first: one swap each.
+    local iconFix = guide.iconStep(items, state.ranges, plan, locked, state.skipped)
     -- Skipping means "later": once only skipped tabs are left, they come back.
-    local step, stepIndex = guide.currentStep(plan, state.skipped, state.focus)
-    if not step and plan.toMoveTotal > 0 and next(state.skipped) then
-        state.skipped = {}
+    local step, stepIndex = nil, nil
+    if not iconFix then
         step, stepIndex = guide.currentStep(plan, state.skipped, state.focus)
+        if not step and plan.toMoveTotal > 0 and next(state.skipped) then
+            state.skipped = {}
+            step, stepIndex = guide.currentStep(plan, state.skipped, state.focus)
+        end
     end
     -- Once every item is in the right tab: put the tabs in the plan's order,
     -- then put each tab in order.
@@ -479,16 +496,16 @@ local function refresh()
                 not settings.get("sortInside"))
         end
     end
-    if not step and plan.toMoveTotal == 0 then
+    if not iconFix and not step and plan.toMoveTotal == 0 then
         finishingSteps()
         if not orderStep and not sortStep and next(state.skipped) then
             state.skipped = {}
             finishingSteps()
         end
     end
-    local activeStep = step or orderStep or sortStep
+    local activeStep = iconFix or step or orderStep or sortStep
     state.current = activeStep and activeStep.key
-    local rows = tabRows(plan, step, sortStep or (orderStep and { bankTab = orderStep.from }))
+    local rows = tabRows(plan, step, iconFix or sortStep or (orderStep and { bankTab = orderStep.from }))
     local badges = tabBadges(plan)
     state.plan = plan
     giveFeedback(plan, items, step)
@@ -529,7 +546,7 @@ local function refresh()
     if step then
         showMoveStep(plan, step, stepIndex, addButton, badges, rows, ratio)
     else
-        showSortStep(plan, sortStep, badges, rows)
+        showSortStep(plan, iconFix or sortStep, badges, rows)
     end
 end
 

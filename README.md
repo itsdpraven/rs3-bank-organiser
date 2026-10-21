@@ -21,10 +21,13 @@ Most banks end up as a few half-sorted tabs and hundreds of items in the main
 tab. Bank Organiser works out where everything belongs and walks you through it,
 one tab at a time, right on top of the real bank.
 
-- **Highlights on your bank.** Items to move glow green, numbered in the order
-  to drag them. The tab to drop them on (or the **+** button for a new tab) is
-  boxed in green. A banner across the bank says what to do, and after each
-  drag tells you whether the item went to the right place.
+- **Highlights on your bank.** One colour code throughout: green means drag,
+  yellow means drop here, blue means click. Items to move glow green, numbered
+  in the order to drag them, and the tab to drop them on (or the **+** button
+  for a new tab) is boxed in yellow and tagged "Drop here". When there's a
+  single drag to make, a moving dotted trail runs from the item to where it
+  goes. A banner across the bank says what to do, and after each drag tells
+  you whether the item went to the right place.
 - **Works from the bank you already have.** Tabs that already fit are kept,
   tabs that fit nothing are reused, and new tabs are only suggested when
   needed. Nothing is deleted. Locked tabs are never touched.
@@ -33,7 +36,9 @@ one tab at a time, right on top of the real bank.
   type from most doses to fewest, herbs grimy → clean → unfinished, logs before
   bows, ores before bars, quest items by quest.
 - **Picks an icon for every tab** from your own items (the best weapon for
-  Melee, your best food for Food & potions...) and shows you how to set it.
+  Melee, your best food for Food & potions...). Fixing any tab whose icon item
+  is in the tab but not at the front is always the first step, so every tab
+  is easy to recognise from the start.
 - **Open any single tab** to tidy just that tab: what belongs elsewhere is
   highlighted with the tab it goes to, then the tab is put in order (a setting).
 - **Point at any bank item** to see which tab it belongs in. Items in your

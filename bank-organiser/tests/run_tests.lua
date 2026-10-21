@@ -138,7 +138,7 @@ local function simulate(entries, tabDisplay, data, mode, lockedIcons)
     local planFn = mode == "tidy" and guide.planTidy or guide.planTabs
     local tabCount = 0
     for t in pairs(tabDisplay) do tabCount = math.max(tabCount, t) end
-    local counter, drags, swaps, tabMoves = 100000, 0, 0, 0
+    local counter, drags, swaps, tabMoves, iconSwaps = 100000, 0, 0, 0, 0
     for _ = 1, 5000 do
         table.sort(entries, function(a, b)
             local ta, tb = a.tab == 0 and math.huge or a.tab, b.tab == 0 and math.huge or b.tab
@@ -170,10 +170,16 @@ local function simulate(entries, tabDisplay, data, mode, lockedIcons)
             if lockedIcons and lockedIcons[range.iconItemId] then locked[k] = true end
         end
         local plan = planFn(items, r, data, locked)
-        local step = guide.currentStep(plan)
         local entryOf = {}
         for _, e in ipairs(entries) do entryOf[e.item] = e end
-        if step then
+        -- A tab whose icon item is in it but not first is fixed before anything else.
+        local iconFix = guide.iconStep(items, r, plan, locked, {})
+        local step = not iconFix and guide.currentStep(plan)
+        if iconFix then
+            local a, b = entryOf[iconFix.from], entryOf[iconFix.to]
+            a.order, b.order = b.order, a.order
+            iconSwaps = iconSwaps + 1
+        elseif step then
             local target
             if step.bankTab then
                 target = tabs[step.bankTab].real
@@ -200,7 +206,8 @@ local function simulate(entries, tabDisplay, data, mode, lockedIcons)
                 local doSort = plan.toMoveTotal == 0 and (data.values.sortInside or mode ~= "tidy")
                 local s = doSort and guide.sortStep(items, r, plan, data, locked, {}, nil, not data.values.sortInside)
                 if not s then
-                    return { drags = drags, swaps = swaps, tabMoves = tabMoves, plan = plan, entries = entries, ranges = r }
+                    return { drags = drags, swaps = swaps, tabMoves = tabMoves, iconSwaps = iconSwaps, plan = plan,
+                        entries = entries, ranges = r }
                 end
                 local a, b = entryOf[s.from], entryOf[s.to]
                 a.order, b.order = b.order, a.order
@@ -368,13 +375,15 @@ if fixture then
         check("every tab's first item is its planned icon", iconsRight)
         check("putting the tabs in order takes a few drags", result.tabMoves > 0 and result.tabMoves < 14,
             result.tabMoves)
+        check("icon fixes are one swap per tab at most", result.iconSwaps <= 14, result.iconSwaps)
     end
     local noSort = settings.defaults()
     noSort.values.sortInside = false
     local entries2, display2 = realEntries()
     local quick = simulate(entries2, display2, noSort, "fresh")
-    check("with sorting off, only the icons are put first", quick and quick.swaps > 0 and quick.swaps <= 14,
-        quick and quick.swaps)
+    local quickSwaps = quick and (quick.swaps + quick.iconSwaps)
+    check("with sorting off, only the icons are put first", quick and quickSwaps > 0 and quickSwaps <= 14, quickSwaps)
+    check("icons are fixed before anything moves", quick and quick.iconSwaps > 0, quick and quick.iconSwaps)
 end
 
 -- Just tidy my tabs -------------------------------------------------------------
@@ -454,6 +463,29 @@ local iconBank = bankOf({ "Swordfish", "Rune platebody + 3", "Rune platelegs + 3
     "Trout", "Salmon", "Tuna" })
 local iconRanges = guide.rangesFromSizes(iconBank, { { size = 4, display = 1 }, { size = 3, display = 2 } })
 check("tidy: a tab's icon item stays", guide.planTidy(iconBank, iconRanges, tidyData).toMoveTotal == 0)
+
+-- Tab icons come first: a planned icon that's in its tab but not at the front
+-- is a single swap with the tab's first item.
+local iconTabs = guide.rangesFromSizes(iconBank, { { size = 4, display = 2, iconItemId = iconBank[1].id },
+    { size = 3, display = 1, iconItemId = iconBank[5].id } })
+local helmFirst = { tabIcon = { [1] = iconBank[4] } }
+local fix = guide.iconStep(iconBank, iconTabs, helmFirst)
+check("an icon not at the front is swapped to the front", fix and fix.bankTab == 1 and fix.from == iconBank[4]
+    and fix.to == iconBank[1] and fix.swapsLeft == 1 and fix.swapsTotal == 1, fix and fix.bankTab)
+check("an icon step has its own key", fix and fix.key == "icon:" .. iconBank[1].id, fix and fix.key)
+local bothTabs = { tabIcon = { [1] = iconBank[4], [2] = iconBank[7] } }
+local firstFix = guide.iconStep(iconBank, iconTabs, bothTabs)
+check("icons are fixed in tab bar order", firstFix and firstFix.bankTab == 2 and firstFix.swapsTotal == 2,
+    firstFix and firstFix.bankTab)
+check("only the open tab's icon when asked", guide.iconStep(iconBank, iconTabs, bothTabs, {}, {}, 1).bankTab == 1)
+check("a locked tab's icon is left", guide.iconStep(iconBank, iconTabs, bothTabs, { [2] = true }).bankTab == 1)
+check("a skipped icon fix waits", guide.iconStep(iconBank, iconTabs, bothTabs, {}, { ["icon:" .. iconBank[5].id] = true })
+    .bankTab == 1)
+check("an icon already at the front needs nothing",
+    guide.iconStep(iconBank, iconTabs, { tabIcon = { [1] = iconBank[1], [2] = iconBank[5] } }) == nil)
+check("an icon still in another tab waits for the move", guide.iconStep(iconBank, iconTabs,
+    { tabIcon = { [1] = iconBank[6] } }) == nil)
+check("no planned icons, no icon steps", guide.iconStep(iconBank, iconTabs, { tabs = {} }) == nil)
 
 -- Every strictness level finishes and respects the lock.
 for _, level in ipairs({ "relaxed", "normal", "strict" }) do

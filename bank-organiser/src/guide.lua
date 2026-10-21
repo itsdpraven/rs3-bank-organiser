@@ -565,6 +565,37 @@ function guide.orderStep(ranges, plan)
     return nil
 end
 
+-- A tab whose planned icon (plan.tabIcon) is already in it but isn't its first
+-- item, so isn't what the tab shows: swapping it to the front comes before
+-- anything else, so every tab is recognisable straight away. Looks only at
+-- tab `only` if given, else every unlocked tab in tab bar order. Returns nil,
+-- or a swap step like sortStep's: { key, bankTab, from = the icon item,
+-- to = the tab's first item, swapsLeft = 1, swapsTotal = tabs to fix }.
+function guide.iconStep(items, ranges, plan, locked, skipped, only)
+    if not plan.tabIcon then return nil end
+    locked = locked or {}
+    skipped = skipped or {}
+    local itemAt = {}
+    for _, item in ipairs(items) do itemAt[item.slot] = item end
+    local order = {}
+    for t = 1, #ranges do
+        if not only or t == only then table.insert(order, t) end
+    end
+    table.sort(order, function(a, b) return ranges[a].display < ranges[b].display end)
+    local step, total = nil, 0
+    for _, t in ipairs(order) do
+        local icon, first = plan.tabIcon[t], itemAt[ranges[t].first]
+        local key = "icon:" .. tostring(ranges[t].iconItemId or t)
+        if icon and first and icon ~= first and not locked[t] and not skipped[key]
+            and guide.tabOf(ranges, icon.slot) == t then
+            total = total + 1
+            step = step or { key = key, bankTab = t, from = icon, to = first, swapsLeft = 1 }
+        end
+    end
+    if step then step.swapsTotal = total end
+    return step
+end
+
 -- What should leave bank tab `t` (the player has just that tab open): the
 -- first planned tab, in plan order, that takes items from it, those items,
 -- and how many items in all should leave the tab. Returns nil, nil, 0 when

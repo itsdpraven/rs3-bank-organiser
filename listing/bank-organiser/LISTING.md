@@ -24,13 +24,17 @@ drag every item yourself.
 1. Turn the plugin on in the Plugin Hub's Manage tab and open your bank.
 2. Open the plugin window from its ribbon icon and click the all-items tab (the
    plugin points to it).
-3. Follow the banner across the top of your bank. Items to move glow green,
-   numbered in the order to drag them; drop them on the tab boxed in green (or
-   the + button to start a new tab). Dragging in number order leaves the tab
-   sorted.
-4. When every item is in the right tab, the plugin helps you put your tabs in
-   the plan's order (drag the green tab onto the blue one), then put the items
-   inside each tab in order (drag the green item onto the blue one).
+3. Follow the banner across the top of your bank. The colours always mean the
+   same thing: green is "drag this", yellow is "drop it here", blue is "click
+   this". Items to move glow green, numbered in the order to drag them; drop
+   them on the tab boxed in yellow (or the + button to start a new tab).
+   Dragging in number order leaves the tab sorted.
+   (Before anything moves, any tab whose icon item is in the tab but not at
+   the front gets that fixed first, so every tab is easy to recognise.)
+4. When every item is in the right tab, the plugin helps you put your
+   tabs in the plan's order (drag the green tab onto the yellow one), then put
+   the items inside each tab in order (drag the green item onto the yellow
+   one).
 
 You can pause, skip a tab for now (it comes back once the rest are done) or click any tab in the list to work on it next. The plugin re-checks your bank
 after every change, so you can stop and come back whenever you like.
