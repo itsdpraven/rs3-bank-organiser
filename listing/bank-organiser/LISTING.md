@@ -95,5 +95,5 @@ Game information is not stored by the plugin between sessions. Plugin settings, 
 - Listing image: `listing-image.png` in this folder (1920x1080, 16:9; mod.io needs at least 512x288 and at most 8 MB).
 - Screenshots: the bank with green highlights and the banner; the plugin
   window's tab list; the tab editor.
-- Tags: none needed (the plugin requests no permissions).
+- Tags: Interface, Utility, Items and Inventory (optionally Skilling). No permission tags: it requests none.
 - Platforms: select every platform the upload asks for.

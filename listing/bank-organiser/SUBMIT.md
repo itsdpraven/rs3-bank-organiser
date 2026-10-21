@@ -28,7 +28,7 @@ On the RuneScape page on mod.io, click **Add plugin** (top right).
 | Allow dependents | off (nothing depends on it) |
 | Allow to be added to collections | on |
 | Description | everything from *Description* to the end of *Data Protection (case 1)* in `LISTING.md` |
-| Tags | none needed (the plugin requests no permissions) |
+| Tags | Interface, Utility, Items and Inventory (and Skilling if you like). No permission tags are needed: it requests none. |
 | Visibility | **Hidden** until you're ready for players to see it |
 
 The description must keep its four required sections: Email, EULA,
