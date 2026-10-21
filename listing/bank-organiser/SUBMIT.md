@@ -38,9 +38,14 @@ To keep the email out of public view, add at the end of the description:
 
 ## Step 2: Media
 
-Optional: up to 10 screenshots (.png/.jpg) of the plugin working in the game,
-e.g. the bank with green highlights and the banner, the plugin window's tab
-list, and the tab editor. Without them, the listing image is shown.
+Optional (without them, the listing image is shown). Upload these three, in
+this order (1920x1080 .png, up to 10 allowed):
+
+1. `gallery-1.png`: the plugin's highlights on a real bank, explained
+2. `gallery-2.png`: the Recommended 14-tab layout
+3. `gallery-3.png`: how it works, and what you can customise
+
+Screenshots of the plugin window can be added later.
 
 ## Step 3: Dependencies
 
