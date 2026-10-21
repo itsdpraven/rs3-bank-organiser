@@ -91,6 +91,8 @@ This information is not transmitted outside of the plugin under any circumstance
 
 Game information is not stored by the plugin between sessions. Plugin settings, your tab plan and your tab locks are stored on your device between sessions using the plugin database, and can be deleted at any time from the plugin window (Edit plan > Delete saved data).
 
+For Jagex: I request that the supplied email is hidden from public view.
+
 ## Media checklist
 
 - Listing image: `listing-image.png` in this folder (1920x1080, 16:9; mod.io needs at least 512x288 and at most 8 MB).

@@ -8,3 +8,7 @@ reports/
 
 # A recorded real bank, kept private (the tests skip what needs it)
 bank-organiser/tests/fixtures/real_bank.lua
+
+# The plugin's contact email, put into the upload by the packaging script (kept
+# out of the public repository)
+tools/contact-email.txt

@@ -114,8 +114,9 @@ development only and must never be uploaded.
 
 ## Releasing
 
-1. Put the plugin's public contact address in `plugin.json`
-   (`contactEmailAddress`) and in the listing; not a personal login address.
+1. Put the plugin's contact address in `tools/contact-email.txt` (one line,
+   kept out of the repository). The packaging script writes it into the
+   upload's `plugin.json` and into `dist/LISTING.md`.
 2. Raise `version` (numbers and dots only).
 3. Build the upload, which contains only `main.lua`, `plugin.json` and `src/`:
 
