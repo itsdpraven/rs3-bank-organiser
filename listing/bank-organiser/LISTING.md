@@ -1,8 +1,7 @@
 # Bank Organiser: mod.io listing
 
-Copy the sections below into the mod.io submission. Replace
-`PUBLIC-CONTACT-EMAIL` (here and in `plugin.json`) with the plugin's own
-public address, not the one used to log in to mod.io or RuneScape.
+Copy the sections below into the mod.io submission. The contact email
+(`itsdpraven@proton.me`) must match `contactEmailAddress` in `plugin.json`.
 Wording rule: describe what the plugin shows ("highlights", "you drag"),
 never "auto", "automatic", "one-click" or "macro".
 
@@ -73,7 +72,7 @@ your game is set to another language.
 
 ## Email
 
-The contact email address for this plugin is PUBLIC-CONTACT-EMAIL.
+The contact email address for this plugin is itsdpraven@proton.me.
 
 ## EULA
 
@@ -90,8 +89,6 @@ This plugin uses the following information: the contents of your bank and backpa
 This information is not transmitted outside of the plugin under any circumstances.
 
 Game information is not stored by the plugin between sessions. Plugin settings, your tab plan and your tab locks are stored on your device between sessions using the plugin database, and can be deleted at any time from the plugin window (Edit plan > Delete saved data).
-
-For Jagex: I request that the supplied email is hidden from public view.
 
 ## Media checklist
 

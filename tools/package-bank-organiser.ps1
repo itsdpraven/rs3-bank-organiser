@@ -1,9 +1,9 @@
 # Builds the Plugin Hub upload for Bank Organiser:
 #   dist\bank-organiser-<version>.zip  containing only main.lua, plugin.json and src\
 # (tests\, the README and the dev-only probe/testkit plugins never ship), and
-#   dist\LISTING.md  the mod.io listing text with the contact email filled in.
-# The contact email comes from tools\contact-email.txt (not in the public
-# repository) and is written into the zip's plugin.json.
+#   dist\LISTING.md  a copy of the mod.io listing text.
+# The contact email is the one in plugin.json, unless tools\contact-email.txt
+# (git-ignored) gives another, which is then written into the zip's plugin.json.
 # Stops with an error if anything would get the plugin rejected.
 #
 #   powershell -ExecutionPolicy Bypass -File tools\package-bank-organiser.ps1

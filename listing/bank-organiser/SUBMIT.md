@@ -1,13 +1,12 @@
 # Submitting Bank Organiser to mod.io
 
 Follows Jagex's [submission process](https://developer.runescape.com/rs/submission/process.html).
-Everything to paste is in `dist/LISTING.md` after packaging ([`LISTING.md`](LISTING.md) with the email filled in).
+Everything to paste is in [`LISTING.md`](LISTING.md).
 
 ## Before you start
 
-- [ ] `tools/contact-email.txt` holds the plugin's contact email (it isn't in the
-      public repository; the packaging script puts it into the upload and
-      writes `dist/LISTING.md`, the listing text with the email filled in).
+- [ ] `plugin.json` and `LISTING.md` have the same contact email
+      (`itsdpraven@proton.me`).
 - [ ] The latest build has been tried in the game (moderators expect working
       files and say not to use moderation as testing).
 - [ ] The upload is built:
@@ -34,8 +33,6 @@ On the RuneScape page on mod.io, click **Add plugin** (top right).
 
 The description must keep its four required sections: Email, EULA,
 Permissions ("This plugin requests no permissions") and Data Protection (case 1).
-To keep the email out of public view, add at the end of the description:
-`For Jagex: I request that the supplied email is hidden from public view.`
 
 ## Step 2: Media
 
