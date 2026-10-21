@@ -14,7 +14,8 @@
 --
 -- The real guidance is drawn on the bank itself (overlay.lua); this window
 -- says what's happening, lists every tab, and lets the player lock tabs and
--- adjust how the plugin decides.
+-- adjust how the plugin decides. A fourth view, Q&A (the button at the top
+-- right), answers the questions players ask most.
 
 local util = require("src/util")
 local widgets = require("src/ui/widgets")
@@ -118,7 +119,10 @@ local function buildMain(root, ctx)
 
     local title = widgets.text(root, "Bank Organiser", { colour = widgets.COLOUR_HEADING, heading = true })
     title:SetPos(GAP, y)
-    title:SetSize(-2 * GAP, LINE + 2, 1.0, 0.0)
+    title:SetSize(-(3 * GAP + BUTTON_W), LINE + 2, 1.0, 0.0)
+    local help = widgets.button(root, "Q&A", function() panel.pendingView = "help" end)
+    help:SetPos(-(GAP + BUTTON_W), y - 2, 1.0, 0.0)
+    help:SetSize(BUTTON_W, LINE + 4)
     y = y + LINE + 4
 
     p.message = widgets.text(root, "", { colour = 0xFFFFFF, lines = 3 })
@@ -249,6 +253,17 @@ local function editorPage(root, titleText, backView)
         b:SetPos(-BUTTON_W, 0, 1.0, 0.0)
         b:SetSize(BUTTON_W, ROW)
         area.add(row, ROW, 3)
+    end
+
+    -- A paragraph that wraps over as many lines as it needs (worked out from
+    -- the width, as text can't be measured).
+    function page.paragraph(text, colour)
+        local width = 0
+        pcall(function() width = v.width end)
+        if not width or width <= 0 then width = 280 end
+        local perLine = math.max(20, math.floor((width - 10) / 6.5))
+        local lines = math.max(1, math.ceil(#text / perLine))
+        area.add(widgets.text(v, text, { colour = colour, lines = lines }), lines * LINE, 6)
     end
 
     function page.finish()
@@ -461,6 +476,69 @@ local function buildTabEditor(root, ctx)
     page.finish()
 end
 
+-- Questions and answers ---------------------------------------------------------
+-- Each entry: a question, then its answer as one or more paragraphs.
+
+local QUESTIONS = {
+    { "What do the colours mean?", {
+        "Green: drag this. Yellow: drop it here. Blue: click this.",
+        "Numbers on green items are the order to drag them in. When there's just one thing to drag, a dotted "
+            .. "trail runs from it to where it goes." } },
+    { "How does it decide where things go?", {
+        "Every item gets a kind (melee gear, runes, logs, quest items...) from the game's own item details: its "
+            .. "Grand Exchange category, combat style and type. Your plan says which kinds share a tab. Change it "
+            .. "under Edit plan, or send items by name to a tab." } },
+    { "How is each tab put in order?", {
+        "First the tab's icon item, then each kind in the order the plan lists them (Magic: gear, then runes). "
+            .. "Within each kind:",
+        "Gear: by level, lowest first, each set together: weapon, off-hand, head, body, legs, hands, feet, "
+            .. "shield, cape, neck, ring.",
+        "Runes: elemental, combination, then the rest, with Necromancy runes last.",
+        "Potions: every dose of a potion together, from 4 doses down to 1.",
+        "Food: by how much it heals. Herblore: grimy herbs, clean herbs, unfinished potions, then the rest.",
+        "Skilling supplies: in the order you use them (logs, then bows; ores, then bars), then by level.",
+        "Clues: easy to master. Quest items: by quest. Cosmetics: by outfit." } },
+    { "Why drag in number order?", {
+        "An item dropped on a tab goes to the end of it. Dragging in number order leaves the tab sorted "
+            .. "already, so there's less to do afterwards." } },
+    { "What does \"part of the way\" mean?", {
+        "In a big tab, the item and where it goes can be further apart than fits on screen, so they can't be "
+            .. "dragged in one go. Drop it on the yellow item part of the way; it's asked for again from there." } },
+    { "There's no yellow box on my tabs?", {
+        "Your tab bar has more tabs than it can show. The plugin says so at the top of your items: click the "
+            .. "blue arrow at the end of the tab bar to scroll the tabs." } },
+    { "Will it delete my tabs?", {
+        "No. It builds on the tabs you have: tabs that fit are kept, tabs that fit nothing are reused, and a "
+            .. "new tab is only suggested when needed. A tab only goes when you've moved everything out of it." } },
+    { "What does Lock do?", {
+        "A locked tab is left exactly as it is: nothing moves in or out and it isn't sorted. Locked tabs still "
+            .. "count towards the game's 14 tabs, so the plan uses fewer." } },
+    { "What does Skip for now do?", {
+        "Leaves the current tab for later. Skipped tabs come back once the rest are done. Click a tab in the "
+            .. "list to work on it straight away." } },
+    { "Can I tidy just one tab?", {
+        "Yes: open that tab on its own. Anything that belongs elsewhere is moved out first, then the tab is put "
+            .. "in order. Open the all-items tab to follow the whole plan. (Turn this off under Edit plan: "
+            .. "Open a tab.)" } },
+    { "Can it move the items for me?", {
+        "No. Plugins aren't allowed to act for you, so it shows you what to do and you make every drag." } },
+    { "Swap or insert?", {
+        "It's made for the bank's swap mode (dropping an item on another swaps them). Insert mode works too, "
+            .. "but sorting can take a few more drags." } },
+    { "Is anything sent anywhere?", {
+        "No. Your plan, settings and locks are saved only on this computer. Delete them any time: Edit plan, "
+            .. "then Delete saved data." } },
+}
+
+local function buildHelp(root)
+    local page = editorPage(root, "Questions & answers", "main")
+    for _, entry in ipairs(QUESTIONS) do
+        page.heading(entry[1])
+        for _, text in ipairs(entry[2]) do page.paragraph(text) end
+    end
+    page.finish()
+end
+
 -- Window lifecycle -------------------------------------------------------------
 
 -- Builds the window. `root` is the empty layer from ContentLayerReady.
@@ -485,6 +563,8 @@ function panel.tick()
             buildPlanEditor(panel.root, panel.ctx)
         elseif view == "tab" then
             buildTabEditor(panel.root, panel.ctx)
+        elseif view == "help" then
+            buildHelp(panel.root)
         else
             buildMain(panel.root, panel.ctx)
         end

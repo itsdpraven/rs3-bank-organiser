@@ -70,6 +70,10 @@ after every change, so you can stop and come back whenever you like.
   deposit straight into the right tab.
 - After each drag, the banner tells you whether the item went to the right
   place.
+- Works on banks of any size: if a tab is scrolled out of the tab bar, the
+  plugin points you to the arrow; in a big tab, items that have to travel
+  further than fits on screen are moved part of the way first.
+- A Q&A page in the plugin window explains how items are placed and ordered.
 
 Items are sorted using the game's own item information (Grand Exchange
 category, combat style, item type), so the plugin knows its gear from its

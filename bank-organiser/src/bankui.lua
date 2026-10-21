@@ -12,6 +12,10 @@
 --     first item in that tab. The "+" (new tab) button comes after them and
 --     has no item. Dropping an item on a tab icon moves it into that tab;
 --     dropping it on "+" starts a new tab.
+--   Component 168 (170's parent) is the visible strip of the tab bar. With
+--     more tabs than fit it scrolls sideways (scrollX), using the arrows at
+--     either end: 159 on the left, 162 on the right. The icons still report
+--     their unscrolled positions, so the scroll is taken off (shownRect).
 --   The bank stores tabs in the order they were made, which isn't always
 --     the tab bar order (tabs can be dragged around), and items not in a tab
 --     come last. Player variables BANK_TAB2..BANK_TAB15 hold each stored
@@ -29,6 +33,9 @@ local BACKPACK = 15       -- the backpack shown beside the bank
 local SLOT_CONTAINER = 201
 local TAB_BAR = 170
 local ALL_ITEMS_TAB = 165 -- the infinity icon left of the tab bar
+local TAB_STRIP = 168
+local TAB_ARROW_LEFT = 159
+local TAB_ARROW_RIGHT = 162
 
 local function try(fn)
     local ok, result = pcall(fn)
@@ -288,6 +295,92 @@ function bankui.slotRect(slot, geo)
         r.x, r.y = r.x - geo.scrollX, r.y - geo.scrollY
     end
     return r
+end
+
+-- Where a component outside the grid (a tab icon, the "+") is drawn. The tab
+-- bar scrolls sideways when there are more tabs than fit, with arrows at the
+-- ends, so like the grid every parent's scroll is taken off and the icon only
+-- counts as shown if it's (mostly) inside every parent. Returns:
+--   rect - where it's drawn, or nil when it's scrolled out of sight (or the
+--          bank is closed)
+--   side - when hidden: "left" or "right", the way to scroll the tab bar
+function bankui.shownRect(component)
+    if not component or try(function() return component.visibleGlobal end) ~= true then return nil end
+    local chain = {}
+    local c = try(function() return component.parent end)
+    while c and #chain < 30 do
+        table.insert(chain, c)
+        local current = c
+        c = try(function() return current.parent end)
+    end
+    local clip, offX, offY = nil, 0, 0
+    for i = #chain, 1, -1 do -- from the top down
+        local a = chain[i]
+        local r = bankui.rect(a)
+        if r and r.w > 0 and r.h > 0 then
+            r.x, r.y = r.x - offX, r.y - offY
+            clip = intersect(clip, r)
+        end
+        offX = offX + (try(function() return a.scrollX end) or 0)
+        offY = offY + (try(function() return a.scrollY end) or 0)
+    end
+    local r = bankui.rect(component)
+    if not r then return nil end
+    r.x, r.y = r.x - offX, r.y - offY
+    if clip then
+        local shown = intersect(clip, r)
+        if shown.w < r.w * 2 / 3 or shown.h < r.h * 2 / 3 then
+            return nil, (r.x + r.w / 2 < clip.x + clip.w / 2) and "left" or "right"
+        end
+    end
+    return r
+end
+
+-- How the slots of a tab (bank slots `first` to `last`) are laid out on
+-- screen: how many columns, and how many rows fit in view at once. Returns
+-- columns, rows, or nil if that can't be worked out (e.g. the tab is hidden).
+function bankui.gridShape(first, last)
+    local geo = bankui.geometry()
+    local start = geo and bankui.isSlotShown(first) and bankui.slotRect(first, geo)
+    if not start or start.h <= 0 then return nil end
+    local columns, pitch = 1, nil
+    for slot = first + 1, math.min(last, first + 60) do
+        local r = bankui.slotRect(slot, geo)
+        if not r then break end
+        if r.y == start.y then
+            columns = columns + 1
+        else
+            pitch = r.y - start.y
+            break
+        end
+    end
+    pitch = (pitch and pitch > 0) and pitch or (start.h + 4)
+    return columns, math.floor(geo.view.h / pitch)
+end
+
+-- How far the tab bar is scrolled sideways (changes when an arrow is clicked).
+function bankui.tabScrollX()
+    return try(function() return ui.Interfaces:GetComponent(BANK_INTERFACE, TAB_STRIP).scrollX end) or 0
+end
+
+-- How many tab bar icons fit in its visible strip at once, or nil if that
+-- can't be worked out.
+function bankui.tabsInView()
+    local icons = bankui.readTabIcons()
+    local strip = try(function() return ui.Interfaces:GetComponent(BANK_INTERFACE, TAB_STRIP) end)
+    local a, b = icons[1] and bankui.rect(icons[1].component), icons[2] and bankui.rect(icons[2].component)
+    local width = strip and try(function() return strip.width end)
+    if not (a and b and width) or b.x <= a.x then return nil end
+    return math.floor(width / (b.x - a.x))
+end
+
+-- The arrow that scrolls the tab bar towards `side` ("left" or "right"), as
+-- a screen rectangle, or nil if it isn't shown (every tab fits).
+function bankui.tabArrowRect(side)
+    local arrow = try(function()
+        return ui.Interfaces:GetComponent(BANK_INTERFACE, side == "left" and TAB_ARROW_LEFT or TAB_ARROW_RIGHT)
+    end)
+    return arrow and bankui.shownRect(arrow) or nil
 end
 
 -- For the development log: every component from the grid up, with its

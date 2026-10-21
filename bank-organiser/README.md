@@ -103,7 +103,8 @@ sent anywhere. **Edit plan > Delete saved data** removes everything.
 
 Run the tests with Lua 5.4 from this folder:
 
-    lua tests/run_tests.lua
+    lua tests/run_tests.lua          unit tests
+    lua tests/e2e/run_e2e.lua        the whole plugin against a fake game client
 
 Try it in the game: link this folder into
 `C:\ProgramData\Jagex\RuneScape-BETA\dev_plugins`, then in the console

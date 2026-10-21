@@ -329,7 +329,7 @@ end
 
 local function layoutBadges(p, origin)
     for i, b in ipairs(spec.badges or {}) do
-        local r = bankui.rect(b.component)
+        local r = bankui.shownRect(b.component)
         if r and r.w > 0 then
             local drawn = badge(i)
             local box = { x = r.x - 4, y = r.y - 4, w = BADGE, h = BADGE }
@@ -354,27 +354,32 @@ local function layout(p)
     local geo = bankui.geometry()
     local view = geo and geo.view
     local dragRect, dropRect = nil, nil -- the one thing to drag, and where it goes
+    local tabsHidden = nil -- { side, what }: a tab to use is scrolled out of the tab bar
 
     if spec.openTab then
-        local r = bankui.rect(spec.openTab)
+        local r = bankui.shownRect(spec.openTab)
         if r then
             place(p.clickBox, r, origin, 3)
             addTag("Click", COLOUR_CLICK, inflate(r, 3), true)
         end
     end
     if spec.dragTab then
-        local r = bankui.rect(spec.dragTab)
+        local r, side = bankui.shownRect(spec.dragTab)
         if r then
             place(p.dragTabFill, r, origin, 2)
             dragRect = r
+        elseif side then
+            tabsHidden = { side = side, what = "the green tab" }
         end
     end
     if spec.target then
-        local r = bankui.rect(spec.target)
+        local r, side = bankui.shownRect(spec.target)
         if r then
             place(p.dropFill, r, origin, 3)
             place(p.dropBox, r, origin, 3)
             dropRect = inflate(r, 3)
+        elseif side then
+            tabsHidden = { side = side, what = "where to drop" }
         end
     end
 
@@ -408,10 +413,13 @@ local function layout(p)
     local dropAbove, dropBelow = false, false
     if view and spec.swapTo and bankui.slotShowsItem(spec.swapTo.slot, spec.swapTo.id) then
         local r = bankui.slotRect(spec.swapTo.slot, geo)
-        if r and r.y + r.h > view.y and r.y < view.y + view.h then
-            place(p.dropFill, r, origin, 2)
-            place(p.dropBox, r, origin, 2)
-            dropRect = inflate(r, 2)
+        local top = r and math.max(r.y, view.y)
+        local bottom = r and math.min(r.y + r.h, view.y + view.h)
+        if r and bottom - top >= r.h / 3 then
+            local visible = { x = r.x, y = top, w = r.w, h = bottom - top }
+            place(p.dropFill, visible, origin)
+            place(p.dropBox, visible, origin)
+            dropRect = visible
         elseif r then
             dropAbove, dropBelow = r.y < view.y, r.y >= view.y
         end
@@ -428,17 +436,33 @@ local function layout(p)
         if dropRect then layoutTrail(origin, dragRect, dropRect) end
     end
 
-    if view and (above > 0 or below > 0 or dropAbove or dropBelow) then
-        local text = below > 0 and string.format("%d more green items below - scroll down", below)
-            or above > 0 and string.format("%d more green items above - scroll up", above)
-            or dropBelow and "Yellow drop spot is below - scroll down"
-            or "Yellow drop spot is above - scroll up"
-        below = (below > 0 or (above == 0 and dropBelow)) and 1 or 0
+    -- One hint at a time, most important first: a tab scrolled out of the tab
+    -- bar (nothing can be dropped until it's back), then items out of view.
+    local text, atBottom = nil, false
+    if tabsHidden then
+        -- Point at the arrow that scrolls the tab bar the right way.
+        local arrow = bankui.tabArrowRect(tabsHidden.side)
+        if arrow and not spec.openTab then
+            place(p.clickBox, arrow, origin, 2)
+            addTag("Click", COLOUR_CLICK, inflate(arrow, 2), true)
+        end
+        text = string.format("More tabs to the %s: click the %s arrow to see %s", tabsHidden.side,
+            arrow and "blue" or tabsHidden.side, tabsHidden.what)
+    elseif below > 0 then
+        text, atBottom = string.format("%d more green items below - scroll down", below), true
+    elseif above > 0 then
+        text = string.format("%d more green items above - scroll up", above)
+    elseif dropBelow then
+        text, atBottom = "Yellow drop spot is below - scroll down", true
+    elseif dropAbove then
+        text = "Yellow drop spot is above - scroll up"
+    end
+    if view and text then
         p.hint.content = text
         -- A dark strip behind the text so it reads over the items.
         local h = widgets.LINE + 6
-        local w = math.min(view.w - 20, 300)
-        local r = { x = view.x + (view.w - w) / 2, y = below > 0 and (view.y + view.h - h - 4) or (view.y + 4),
+        local w = math.min(view.w - 20, #text * 7 + 24)
+        local r = { x = view.x + (view.w - w) / 2, y = atBottom and (view.y + view.h - h - 4) or (view.y + 4),
             w = w, h = h }
         place(p.hintBack, r, origin)
         place(p.hint, r, origin)
@@ -450,7 +474,7 @@ local function layout(p)
     layoutHover(p, origin, geo)
 end
 
--- Called every client tick: re-lays out when the bank scrolls or the plan
+-- Called every client tick: re-lays out when the bank or its tab bar scrolls or the plan
 -- changes (and every half second anyway), makes the drop and click boxes
 -- pulse, and runs a wave of light along the trail towards the drop box.
 function overlay.tick()
@@ -465,7 +489,7 @@ function overlay.tick()
     ticks = ticks + 1
 
     util.try("overlay", function()
-        local scroll = bankui.scrollY()
+        local scroll = bankui.scrollY() .. ":" .. bankui.tabScrollX()
         if flash and ticks == flash.untilTick then needsLayout = true end
         if needsLayout or scroll ~= lastScroll or ticks % 25 == 0 then
             needsLayout = false

@@ -132,4 +132,72 @@ Event.MiniMenuReady.Subscribe("probeHover", function(event)
     end
 end)
 
+-- The tab bar's layout: every component from the icons (170) up with its
+-- position, size and scroll; the icons themselves; and every visible static
+-- component of the bank level with the tab bar (to find the scroll arrows).
+-- Logged with the bank open, then again whenever it changes (e.g. after the
+-- player clicks a tab bar arrow).
+local function rectOf(c)
+    return try(function()
+        local p = c.xyGlobal
+        return string.format("%d,%d %dx%d", p.x, p.y, c.width, c.height)
+    end) or "?"
+end
+local function tabBarReport()
+    local bar = try(function() return ui.Interfaces:GetComponent(BANK, 170) end)
+    if not bar or not try(function() return bar.visibleGlobal end) then return nil end
+    local out = {}
+    local c, depth = bar, 0
+    while c and depth < 12 do
+        local here = c
+        table.insert(out, string.format("UP%d s=%s d=%s t=%s %s scroll=%s,%s of %sx%s", depth,
+            tostring(try(function() return here.staticID end)), tostring(try(function() return here.dynamicID end)),
+            tostring(try(function() return here.type end)), rectOf(here),
+            tostring(try(function() return here.scrollX end)), tostring(try(function() return here.scrollY end)),
+            tostring(try(function() return here.scrollWidth end)), tostring(try(function() return here.scrollHeight end))))
+        c = try(function() return here.parent end)
+        depth = depth + 1
+    end
+    local icons = {}
+    try(function()
+        bar:IterateDynamicComponents(function(child)
+            if try(function() return child.visibleGlobal end) then
+                table.insert(icons, string.format("%s@%s", tostring(try(function() return child.associatedObjectID end)),
+                    rectOf(child)))
+            end
+            return false
+        end)
+    end)
+    table.insert(out, "ICONS " .. table.concat(icons, " "))
+    local top = try(function() return bar.xyGlobal.y end) or 0
+    local bottom = top + (try(function() return bar.height end) or 0)
+    local near = {}
+    for staticId = 0, 400 do
+        local s = try(function() return ui.Interfaces:GetComponent(BANK, staticId) end)
+        local y = s and try(function() return s.visibleGlobal and s.xyGlobal.y end)
+        local h = y and try(function() return s.height end)
+        if y and h and h < 120 and y < bottom + 10 and y + h > top - 10 then
+            table.insert(near, string.format("%d(t=%s p=%s)@%s", staticId, tostring(try(function() return s.type end)),
+                tostring(try(function() return s.parent.staticID end)), rectOf(s)))
+        end
+    end
+    table.insert(out, "NEAR " .. table.concat(near, " "))
+    return out
+end
+
+local lastTabBar = nil
+local probeTicks = 0
+Event.Logic.Subscribe("probeTabBar", function()
+    probeTicks = probeTicks + 1
+    if probeTicks % 50 ~= 0 then return end
+    local lines = tabBarReport()
+    local joined = lines and table.concat(lines, "|")
+    if joined and joined ~= lastTabBar then
+        lastTabBar = joined
+        for _, line in ipairs(lines) do
+            for i = 1, #line, 560 do note("TABBAR " .. line:sub(i, i + 559)) end
+        end
+    end
+end)
+
 log("PROBE: verification running (run " .. run .. "). Use the bank as described at the top of main.lua.")

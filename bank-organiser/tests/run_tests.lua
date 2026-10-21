@@ -487,6 +487,74 @@ check("an icon still in another tab waits for the move", guide.iconStep(iconBank
     { tabIcon = { [1] = iconBank[6] } }) == nil)
 check("no planned icons, no icon steps", guide.iconStep(iconBank, iconTabs, { tabs = {} }) == nil)
 
+-- Big tabs: a drag between items further apart than fits on screen goes part
+-- of the way (10 columns, 15 rows on screen: up to 12 rows apart in one go).
+do
+    local itemAt, range = {}, { first = 1, last = 200 }
+    for slot = 1, 200 do itemAt[slot] = { slot = slot, id = 1000 + slot, name = "Item " .. slot } end
+    local far = { key = "sort:1", bankTab = 1, from = itemAt[150], to = itemAt[2], swapsLeft = 5 }
+    local hop = guide.withinReach(far, range, itemAt, 10, 15)
+    check("a far drag goes part of the way", hop ~= far and hop.hop and hop.to == itemAt[30] and hop.from == far.from,
+        hop.to and hop.to.slot)
+    check("going part of the way keeps the step's key", hop.key == far.key and hop.swapsLeft == 5)
+    check("the original step isn't changed", far.to == itemAt[2] and not far.hop)
+    local near = { from = itemAt[50], to = itemAt[2] }
+    check("a drag within one screen is left as it is", guide.withinReach(near, range, itemAt, 10, 15) == near)
+    local down = guide.withinReach({ from = itemAt[2], to = itemAt[190] }, range, itemAt, 10, 15)
+    check("part of the way works downwards too", down.hop and down.to == itemAt[122], down.to and down.to.slot)
+    check("a tiny view doesn't go part of the way", guide.withinReach(far, range, itemAt, 10, 3) == far)
+    check("an unknown grid doesn't go part of the way", guide.withinReach(far, range, itemAt, nil, nil) == far)
+    -- Each part-way drag gets closer, so it always gets there.
+    local position, hops = 150, 0
+    while hops < 20 do
+        local s = guide.withinReach({ from = itemAt[position], to = itemAt[2] }, range, itemAt, 10, 15)
+        if not s.hop then break end
+        position, hops = s.to.slot, hops + 1
+    end
+    check("part-way drags reach the target", hops == 1 and position == 30, hops .. " hops, at " .. position)
+end
+
+-- A full bank (no "+"): moves into tabs that exist come first, so old tabs
+-- empty and make room; a new tab only when nothing else is left.
+do
+    local newTab = { key = "new", toMove = { {} } }
+    local existing = { key = "old", bankTab = 2, toMove = { {} } }
+    local plan = { tabs = { newTab, existing } }
+    check("with room, steps go in order", guide.currentStep(plan, {}, nil, false) == newTab)
+    check("full: a step into an existing tab comes first", guide.currentStep(plan, {}, nil, true) == existing)
+    check("full: even a skipped existing tab beats a new one",
+        guide.currentStep(plan, { old = true }, nil, true) == existing)
+    check("full: a picked new tab waits", guide.currentStep(plan, {}, "new", true) == existing)
+    check("full: a new tab when nothing else is left",
+        guide.currentStep({ tabs = { newTab } }, {}, nil, true) == newTab)
+    local outBank = bankOf({ "Swordfish", "Trout", "Dragon scimitar" })
+    local outRanges = guide.rangesFromSizes(outBank, { { size = 2, display = 1 }, { size = 1, display = 2 } })
+    local outPlan = { tabs = { { key = "n", toMove = { outBank[1] } }, { key = "e", bankTab = 2, toMove = { outBank[2] } } } }
+    check("open tab, room left: the first destination", guide.tabOutgoing(outPlan, outRanges, 1, false) == outPlan.tabs[1])
+    local dest, here, total = guide.tabOutgoing(outPlan, outRanges, 1, true)
+    check("open tab, full: an existing tab first", dest == outPlan.tabs[2] and here[1] == outBank[2] and total == 2)
+end
+
+-- Locked tabs take up some of the game's 14 tabs, so the plan has fewer.
+do
+    local all = {}
+    for i, raw in ipairs(dofile("tests/fixtures/sample_items.lua")) do all[i] = bank.describe(raw, 1, i) end
+    local data = settings.defaults()
+    data.values.minTabSize = 1
+    local function planned(lockedCount)
+        local sizes, locked = {}, {}
+        for k = 1, lockedCount do sizes[k] = { size = 1, display = k }; locked[k] = true end
+        local r = guide.rangesFromSizes(all, sizes)
+        guide.clearCache()
+        local plan = guide.planTabs(all, r, data, locked)
+        return #plan.tabs
+    end
+    local free, oneLocked, threeLocked = planned(0), planned(1), planned(3)
+    check("the sample bank fills all 14 tabs", free == 14, free)
+    check("with a locked tab, the plan has at most 13", oneLocked <= 13, oneLocked)
+    check("with 3 locked tabs, the plan has at most 11", threeLocked <= 11, threeLocked)
+end
+
 -- Every strictness level finishes and respects the lock.
 for _, level in ipairs({ "relaxed", "normal", "strict" }) do
     local data = settings.defaults()

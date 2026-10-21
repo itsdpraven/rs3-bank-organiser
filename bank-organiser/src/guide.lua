@@ -13,7 +13,9 @@
 --      Planned tabs with fewer items than `minTabSize` join the biggest
 --      planned tab of the same family (e.g. a small Necromancy tab joins
 --      the biggest combat tab), or the last tab ("Everything else"); if
---      there are still more than `maxTabs`, the smallest join too.
+--      there are still more than `maxTabs`, the smallest join too. Locked
+--      tabs count towards the game's limit of 14 tabs, so with 2 locked
+--      tabs the plan has at most 12.
 --   2. Each planned tab takes over the existing bank tab that already holds
 --      most of its items (biggest overlaps first, one each), so as little as
 --      possible has to move. Bank tabs left over are reused for planned tabs
@@ -367,7 +369,11 @@ function guide.planTabs(items, ranges, settingsData, locked)
         local s = sizes()
         if final[g] == g and (s[g] or 0) < minSize then fold(g, familyTarget(g, s, minSize)) end
     end
-    local maxTabs = values.maxTabs or 14
+    local lockedCount = 0
+    for _, isLocked in pairs(locked) do
+        if isLocked then lockedCount = lockedCount + 1 end
+    end
+    local maxTabs = math.max(1, math.min(values.maxTabs or 14, 14 - lockedCount))
     while true do
         local s, active, smallest = sizes(), 0, nil
         for g, size in pairs(s) do
@@ -518,17 +524,27 @@ end
 -- The step to work on now: the one keyed `prefer` if it still has items to
 -- move (the player picked it), else the first, in order, with items still to
 -- move, skipping keys in `skipped`. Returns the step and its position.
-function guide.currentStep(plan, skipped, prefer)
+-- With `full` (the bank can't take another tab), steps into tabs that already
+-- exist come first, even skipped ones: they empty the old tabs that aren't in
+-- the plan, which then vanish and make room for the new ones.
+function guide.currentStep(plan, skipped, prefer, full)
     skipped = skipped or {}
+    local function usable(tab) return #tab.toMove > 0 and (not full or tab.bankTab ~= nil) end
     for i, tab in ipairs(plan.tabs) do
-        if prefer and tab.key == prefer and #tab.toMove > 0 then
+        if prefer and tab.key == prefer and usable(tab) then
             return tab, i
         end
     end
     for i, tab in ipairs(plan.tabs) do
-        if #tab.toMove > 0 and not skipped[tab.key] then
+        if usable(tab) and not skipped[tab.key] then
             return tab, i
         end
+    end
+    if full then
+        for i, tab in ipairs(plan.tabs) do
+            if usable(tab) then return tab, i end
+        end
+        return guide.currentStep(plan, skipped, prefer)
     end
     return nil
 end
@@ -596,12 +612,33 @@ function guide.iconStep(items, ranges, plan, locked, skipped, only)
     return step
 end
 
+-- In a big tab the item to drag and the one to drop it on can be further
+-- apart than fits on screen, so the drag can't be made. Then it's dropped on
+-- an item part of the way instead (as far as one screen allows); it gets
+-- closer with each drag, and the same step comes back until it's in place.
+--   range   - the tab (from rangesFromSizes); itemAt - bank items by slot
+--   columns, rows - the grid's shape (bankui.gridShape)
+-- Returns the step unchanged, or a copy with `to` moved and `hop` set.
+function guide.withinReach(step, range, itemAt, columns, rows)
+    if not (step and range and columns and rows) or rows < 4 or columns < 1 then return step end
+    local fromIndex, toIndex = step.from.slot - range.first, step.to.slot - range.first
+    local reach = rows - 3 -- a couple of rows to spare, so both fit without careful scrolling
+    if math.abs(fromIndex // columns - toIndex // columns) <= reach then return step end
+    local towards = toIndex < fromIndex and -1 or 1
+    local hop = itemAt[range.first + fromIndex + towards * reach * columns]
+    if not hop then return step end
+    local copy = {}
+    for k, v in pairs(step) do copy[k] = v end
+    copy.to, copy.hop = hop, true
+    return copy
+end
+
 -- What should leave bank tab `t` (the player has just that tab open): the
 -- first planned tab, in plan order, that takes items from it, those items,
 -- and how many items in all should leave the tab. Returns nil, nil, 0 when
 -- nothing in the tab belongs elsewhere.
-function guide.tabOutgoing(plan, ranges, t)
-    local first, firstItems, total = nil, nil, 0
+function guide.tabOutgoing(plan, ranges, t, full)
+    local first, firstItems, total, newTab, newItems = nil, nil, 0, nil, nil
     for _, tab in ipairs(plan.tabs) do
         if tab.bankTab ~= t then
             local here = {}
@@ -609,9 +646,15 @@ function guide.tabOutgoing(plan, ranges, t)
                 if guide.tabOf(ranges, item.slot) == t then table.insert(here, item) end
             end
             total = total + #here
-            if #here > 0 and not first then first, firstItems = tab, here end
+            -- With `full` (no room for another tab), existing tabs first.
+            if #here > 0 and full and not tab.bankTab then
+                if not newTab then newTab, newItems = tab, here end
+            elseif #here > 0 and not first then
+                first, firstItems = tab, here
+            end
         end
     end
+    if not first then first, firstItems = newTab, newItems end
     return first, firstItems, total
 end
 

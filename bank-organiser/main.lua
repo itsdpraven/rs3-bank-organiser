@@ -200,15 +200,23 @@ end
 -- refresh. Big changes (the bank opening, the plan changing) aren't drags,
 -- so they're not commented on.
 local function giveFeedback(plan, items, step)
-    local present, nameOf, misplaced = {}, {}, {}
+    local present, nameOf, misplaced, where, icons = {}, {}, {}, {}, {}
     for _, item in ipairs(items) do
         present[item.id], nameOf[item.id] = true, item.name
     end
     for id, d in pairs(plan.destination) do
         if not d.done then misplaced[id] = true end
     end
-    local before, wasPresent = state.misplaced, state.present
-    state.misplaced, state.present = misplaced, present
+    -- Which tab each misplaced item is in, by the tab's icon (0: not in a tab).
+    for _, range in ipairs(state.ranges) do icons[range.iconItemId] = true end
+    for _, item in ipairs(items) do
+        if misplaced[item.id] then
+            local t = guide.tabOf(state.ranges, item.slot)
+            where[item.id] = t and state.ranges[t].iconItemId or 0
+        end
+    end
+    local before, wasPresent, whereBefore, iconsBefore = state.misplaced, state.present, state.where, state.icons
+    state.misplaced, state.present, state.where, state.icons = misplaced, present, where, icons
     if not before then return end
 
     local placed, wrong = {}, {}
@@ -216,7 +224,15 @@ local function giveFeedback(plan, items, step)
         if present[id] and not misplaced[id] then table.insert(placed, id) end
     end
     for id in pairs(misplaced) do
-        if not before[id] then table.insert(wrong, id) end
+        local from, to = whereBefore[id], where[id]
+        if not before[id] then
+            table.insert(wrong, id)
+        elseif from ~= to and to ~= 0 and iconsBefore[to] and (from == 0 or icons[from]) then
+            -- Still in the wrong place, but in another tab: it was dropped in
+            -- the wrong one. (Only when both tabs are known before and after:
+            -- a tab's icon changes when its first item moves.)
+            table.insert(wrong, id)
+        end
     end
     if #placed + #wrong == 0 or #placed + #wrong > 3 then return end
     if #wrong > 0 then
@@ -320,11 +336,22 @@ end
 local function showOrderStep(plan, step, badges, rows)
     local from, to = state.ranges[step.from], state.ranges[step.to]
     local name = plan.report[step.from].name
+    -- Further apart than the tab bar shows at once (both must be on screen):
+    -- drop it on a tab part of the way; the same step comes back from there.
+    local fit, hop = bankui.tabsInView(), false
+    if fit and fit >= 3 and math.abs(from.display - to.display) > fit - 2 then
+        local wanted = from.display + (to.display < from.display and -1 or 1) * (fit - 2)
+        for _, range in ipairs(state.ranges) do
+            if range.display == wanted then to, hop = range, true end
+        end
+    end
     overlay.show({ dragTab = from.component, target = to.component, badges = badges,
-        banner = string.format("Tab order: drag tab %d (%s) onto tab %d (%s left)", from.display, name, to.display,
-            plural(step.movesLeft, "move")) })
+        banner = string.format("Tab order: drag tab %d (%s) onto tab %d%s (%s left)", from.display, name, to.display,
+            hop and ", part of the way" or "", plural(step.movesLeft, "move")) })
     panel.update({
-        message = string.format("Everything is in the right tab. Now put the tabs in order: drag tab %d (%s, green) "
+        message = hop and string.format("Tab %d (%s) goes further along than your tab bar shows at once, so take it "
+            .. "part of the way: drag it (green) onto tab %d (yellow).", from.display, name, to.display)
+            or string.format("Everything is in the right tab. Now put the tabs in order: drag tab %d (%s, green) "
             .. "onto tab %d (yellow).", from.display, name, to.display),
         detail = string.format("%s left to put the tabs in order", plural(step.movesLeft, "move")),
         ratio = 1, canSkip = true,
@@ -339,17 +366,30 @@ local function showSortStep(plan, step, badges, rows)
     local name = plan.report[step.bankTab].name
     local isIcon = plan.tabIcon and plan.tabIcon[step.bankTab] == step.from
     local iconsOnly = step.key:find("^icon:") ~= nil
-    overlay.show({ items = { { slot = step.from.slot, id = step.from.id } },
-        swapTo = { slot = step.to.slot, id = step.to.id }, badges = badges,
-        banner = isIcon and string.format("Tab %d's icon: drag %s (green) onto the first item (yellow)",
-            range.display, step.from.name)
-            or string.format("Sorting tab %d: drag the green item onto the yellow one (%s left)", range.display,
-            plural(step.swapsLeft, "swap")) })
-    panel.update({
-        message = isIcon and string.format("Make %s the icon of tab %d (%s): drag it (green) onto the yellow %s, the "
+    -- Too far apart to drag in one go (both must be on screen): part of the way.
+    local itemAt = {}
+    for _, item in ipairs(bank.snapshot and bank.snapshot.items or {}) do itemAt[item.slot] = item end
+    step = guide.withinReach(step, range, itemAt, bankui.gridShape(range.first, range.last))
+    local banner, message
+    if step.hop then
+        banner = string.format("Tab %d: drag the green item onto the yellow one (part of the way)", range.display)
+        message = string.format("%s goes further up tab %d (%s) than fits on screen, so take it part of the way: "
+            .. "drag it (green) onto the yellow %s.", step.from.name, range.display, name, step.to.name)
+    elseif isIcon then
+        banner = string.format("Tab %d's icon: drag %s (green) onto the first item (yellow)", range.display,
+            step.from.name)
+        message = string.format("Make %s the icon of tab %d (%s): drag it (green) onto the yellow %s, the "
             .. "tab's first item, to swap them.", step.from.name, range.display, name, step.to.name)
-            or string.format("Now putting tab %d (%s) in order: drag the green %s onto the yellow %s to swap them.",
-            range.display, name, step.from.name, step.to.name),
+    else
+        banner = string.format("Sorting tab %d: drag the green item onto the yellow one (%s left)", range.display,
+            plural(step.swapsLeft, "swap"))
+        message = string.format("Now putting tab %d (%s) in order: drag the green %s onto the yellow %s to swap them.",
+            range.display, name, step.from.name, step.to.name)
+    end
+    overlay.show({ items = { { slot = step.from.slot, id = step.from.id } },
+        swapTo = { slot = step.to.slot, id = step.to.id }, badges = badges, banner = banner })
+    panel.update({
+        message = message,
         detail = iconsOnly and string.format("%s to fix first", plural(step.swapsTotal, "tab icon"))
             or string.format("%s left in this tab, %d in all", plural(step.swapsLeft, "swap"), step.swapsTotal),
         ratio = ratio, canSkip = true,
@@ -394,7 +434,7 @@ local function showTabFocus(plan, items, t, locked, addButton, badges, rows)
         return
     end
 
-    local dest, here, totalOut = guide.tabOutgoing(plan, state.ranges, t)
+    local dest, here, totalOut = guide.tabOutgoing(plan, state.ranges, t, addButton == nil)
     if dest then
         local target = dest.bankTab and state.ranges[dest.bankTab].component or addButton
         if not target then
@@ -477,10 +517,11 @@ local function refresh()
     -- Skipping means "later": once only skipped tabs are left, they come back.
     local step, stepIndex = nil, nil
     if not iconFix then
-        step, stepIndex = guide.currentStep(plan, state.skipped, state.focus)
+        local full = addButton == nil
+        step, stepIndex = guide.currentStep(plan, state.skipped, state.focus, full)
         if not step and plan.toMoveTotal > 0 and next(state.skipped) then
             state.skipped = {}
-            step, stepIndex = guide.currentStep(plan, state.skipped, state.focus)
+            step, stepIndex = guide.currentStep(plan, state.skipped, state.focus, full)
         end
     end
     -- Once every item is in the right tab: put the tabs in the plan's order,

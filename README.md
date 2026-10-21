@@ -5,10 +5,6 @@
 <h1 align="center">Bank Organiser</h1>
 
 <p align="center">
-  <a href="https://github.com/itsdpraven/rs3-bank-organiser/actions/workflows/tests.yml"><img src="https://github.com/itsdpraven/rs3-bank-organiser/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
-</p>
-
-<p align="center">
   <b>A RuneScape 3 plugin that sorts your bank into sensible tabs, then puts every tab in order.</b><br>
   It shows you what to move and where. You make every drag.
 </p>
@@ -28,6 +24,10 @@ one tab at a time, right on top of the real bank.
   single drag to make, a moving dotted trail runs from the item to where it
   goes. A banner across the bank says what to do, and after each drag tells
   you whether the item went to the right place.
+- **Works on any bank size.** If the tab to drop on is scrolled out of the tab
+  bar, the plugin points you to the arrow that brings it back. In a big tab,
+  an item that has to travel further than fits on screen is moved part of the
+  way first, so every drag starts and ends on screen.
 - **Works from the bank you already have.** Tabs that already fit are kept,
   tabs that fit nothing are reused, and new tabs are only suggested when
   needed. Nothing is deleted. Locked tabs are never touched.
@@ -44,6 +44,8 @@ one tab at a time, right on top of the real bank.
 - **Point at any bank item** to see which tab it belongs in. Items in your
   backpack show the number of their tab, so you can deposit into the right
   place.
+- **Questions & answers** in the plugin window (the Q&A button) explain how
+  items are placed and ordered, what the colours mean, and more.
 
 ## Your bank, your rules
 
@@ -100,15 +102,23 @@ To try the development version, see [`bank-organiser/README.md`](bank-organiser/
 
 ## Development
 
-The logic is plain Lua 5.4 and is tested outside the game:
+The plugin is plain Lua 5.4 and is tested outside the game:
 
 ```
 cd bank-organiser
-lua tests/run_tests.lua
+lua tests/run_tests.lua          # unit tests: sorting, plans, settings
+lua tests/e2e/run_e2e.lua        # end-to-end tests
 ```
 
-The tests also run on every push (see the Actions tab). The packaging script
-checks the plugin before building the upload:
+The end-to-end tests run the whole plugin against a stand-in for the game
+client, with a simulated player who does only what the highlights show: it
+finds the coloured boxes on screen, works out what's under them, and makes
+that drag or click, until the bank is organised. They cover every plan style
+and mode, locks, skipping, single tabs, a narrow tab bar, big tabs, wrong
+drags, closing the bank part way, every control in the window, and random
+banks (`--fuzz 500` for 500 of them).
+
+The packaging script checks the plugin before building the upload:
 
 ```
 powershell -ExecutionPolicy Bypass -File tools/package-bank-organiser.ps1
