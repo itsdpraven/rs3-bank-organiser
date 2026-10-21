@@ -53,7 +53,8 @@ In the plugin window:
 - **Edit plan**: mode, plan style (Recommended, Compact, Skiller, Simple),
   your tabs (rename, move, add, delete, choose the categories each holds, and
   items by name, typed or picked by pointing at them in the bank), most tabs,
-  smallest tab, sorting inside tabs, tips on hover, backpack badges,
+  smallest tab, sorting inside tabs, working on a single open tab, tips on
+  hover, backpack badges,
   per-character plans, and **Delete saved data**.
 
 ## How items are categorised

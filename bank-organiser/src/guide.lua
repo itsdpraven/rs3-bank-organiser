@@ -565,6 +565,25 @@ function guide.orderStep(ranges, plan)
     return nil
 end
 
+-- What should leave bank tab `t` (the player has just that tab open): the
+-- first planned tab, in plan order, that takes items from it, those items,
+-- and how many items in all should leave the tab. Returns nil, nil, 0 when
+-- nothing in the tab belongs elsewhere.
+function guide.tabOutgoing(plan, ranges, t)
+    local first, firstItems, total = nil, nil, 0
+    for _, tab in ipairs(plan.tabs) do
+        if tab.bankTab ~= t then
+            local here = {}
+            for _, item in ipairs(tab.toMove) do
+                if guide.tabOf(ranges, item.slot) == t then table.insert(here, item) end
+            end
+            total = total + #here
+            if #here > 0 and not first then first, firstItems = tab, here end
+        end
+    end
+    return first, firstItems, total
+end
+
 -- The key of the sort step for a tab (used to skip or pick it).
 function guide.sortKey(range, index)
     return "sort:" .. tostring(range.iconItemId or index)

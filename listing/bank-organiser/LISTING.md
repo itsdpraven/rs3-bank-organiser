@@ -59,6 +59,8 @@ after every change, so you can stop and come back whenever you like.
 - Every tab gets an icon that shows what it holds (the best weapon for Melee,
   your best food for Food & potions...), and the plugin shows you how to set it.
 - Numbered badges on your tab icons show which tabs are tidy.
+- Open any single tab to tidy just that tab: what belongs elsewhere moves out,
+  then the tab is put in order.
 - Point at any bank item to see which tab it belongs in.
 - Items in your backpack show the number of the tab they belong in, so you can
   deposit straight into the right tab.

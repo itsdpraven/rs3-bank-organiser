@@ -331,6 +331,9 @@ local function buildPlanEditor(root, ctx)
     page.help("Once everything is in the right tab, puts each tab in order: sets together, best last.")
 
     page.heading("On the bank")
+    page.pickerRow("Open a tab", { { true, "Work on it" }, { false, "Ask for all" } }, settings.get("tabFocus"),
+        function(value) settings.set("tabFocus", value) end)
+    page.help("Opening one tab tidies just that tab: what belongs elsewhere moves out, then it's put in order.")
     page.pickerRow("Tips on hover", { { true, "Yes" }, { false, "No" } }, settings.get("hoverTips"),
         function(value) settings.set("hoverTips", value) end)
     page.pickerRow("Backpack tabs", { { true, "Yes" }, { false, "No" } }, settings.get("depositHelp"),

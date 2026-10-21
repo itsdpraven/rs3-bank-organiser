@@ -314,7 +314,6 @@ local function showMoveStep(plan, step, stepIndex, addButton, badges, rows, rati
     }, rows)
 end
 
--- Guidance for one swap that puts a tab in order (step from guide.sortStep).
 -- Guidance for moving one tab into its place in the tab bar (step from
 -- guide.orderStep): drag the green tab onto the blue one.
 local function showOrderStep(plan, step, badges, rows)
@@ -331,6 +330,7 @@ local function showOrderStep(plan, step, badges, rows)
     }, rows)
 end
 
+-- Guidance for one swap that puts a tab in order (step from guide.sortStep).
 local function showSortStep(plan, step, badges, rows)
     state.sortStartTotal = math.max(state.sortStartTotal, step.swapsTotal)
     local ratio = state.sortStartTotal > 0 and (1 - step.swapsTotal / state.sortStartTotal) or 1
@@ -348,6 +348,82 @@ local function showSortStep(plan, step, badges, rows)
             range.display, name, step.from.name, step.to.name),
         detail = string.format("%s left in this tab, %d in all", plural(step.swapsLeft, "swap"), step.swapsTotal),
         ratio = ratio, canSkip = true,
+    }, rows)
+end
+
+-- The bank tab the player has open on its own, or nil in the all-items view.
+local function openTab(items)
+    local shown = nil
+    for t, range in ipairs(state.ranges) do
+        if bankui.isSlotShown(range.first) then
+            if shown then return nil end
+            shown = t
+        end
+    end
+    if not shown then return nil end
+    -- With a single tab, tell it apart from the all-items view by whether the
+    -- items not in any tab are on show.
+    if #state.ranges == 1 then
+        local lastTab, lastItem = state.ranges[1], items[#items]
+        if not (lastItem and lastItem.slot > lastTab.last) or bankui.isSlotShown(lastTab.last + 1) then return nil end
+    end
+    return shown
+end
+
+-- One tab is open on its own: first move out what belongs elsewhere (one
+-- destination at a time), then put the tab in order, its icon first.
+local function showTabFocus(plan, items, t, locked, addButton, badges, rows)
+    local range = state.ranges[t]
+    local name = plan.report[t].name
+    if locked[t] then
+        local message = string.format("Tab %d (%s) is locked, so it's left as it is.", range.display, name)
+        overlay.show({ badges = badges, banner = message })
+        panel.update({ message = message, detail = "Unlock it in the list to organise it.", ratio = 1 }, rows)
+        return
+    end
+
+    local dest, here, totalOut = guide.tabOutgoing(plan, state.ranges, t)
+    if dest then
+        local target = dest.bankTab and state.ranges[dest.bankTab].component or addButton
+        if not target then
+            idle("Your bank can't take another tab. Lower \"Most tabs\" under Edit plan.", "", rows)
+            return
+        end
+        local ordered = sorter.sorted(here, function(item) return guide.categoryOf(item, settings.data) end,
+            dest.categories, dest.icon)
+        local highlights = {}
+        for i, item in ipairs(ordered) do
+            table.insert(highlights, { slot = item.slot, id = item.id, label = tostring(i) })
+        end
+        local where = dest.bankTab
+            and string.format("tab %d (%s)", state.ranges[dest.bankTab].display, plan.report[dest.bankTab].name)
+            or string.format("a new %s tab (the green +)", dest.label)
+        overlay.show({ items = highlights, target = target, badges = badges,
+            banner = string.format("Tab %d: drag the %s onto %s", range.display, plural(#here, "green item"), where) })
+        panel.update({
+            message = string.format("Tidying tab %d (%s). The green items belong in %s: drag them onto the green "
+                .. "box, in number order.", range.display, name, where),
+            detail = string.format("%s to move out of this tab", plural(totalOut, "item")),
+            ratio = 0,
+        }, rows)
+        return
+    end
+
+    -- Nothing to move out: put the tab in order (with sorting off, just its icon).
+    local s = guide.sortStep(items, state.ranges, plan, settings.data, locked, {}, guide.sortKey(range, t),
+        not settings.get("sortInside"))
+    if s and s.bankTab == t then
+        showSortStep(plan, s, badges, rows)
+        return
+    end
+    local message = string.format("Tab %d (%s) is organised.", range.display, name)
+    local incoming = plan.report[t].incoming
+    overlay.show({ badges = badges, banner = message })
+    panel.update({
+        message = message,
+        detail = incoming > 0 and string.format("%s for it are in other tabs: open them, or the all-items tab.",
+            plural(incoming, "more item")) or "Open another tab, or the all-items tab for the whole plan.",
+        ratio = 1,
     }, rows)
 end
 
@@ -420,6 +496,12 @@ local function refresh()
 
     if state.paused then
         idle("Paused. Press Resume to carry on.", "", rows)
+        return
+    end
+    -- A single tab open: work on that tab (if the player wants that).
+    local open = settings.get("tabFocus") and openTab(items)
+    if open then
+        showTabFocus(plan, items, open, locked, addButton, badges, tabRows(plan, nil, { bankTab = open }))
         return
     end
     if not activeStep then

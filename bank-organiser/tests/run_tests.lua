@@ -441,6 +441,14 @@ for _, step in ipairs(unlocked.tabs) do
 end
 check("tidy: unlocked, the fish goes to the biggest food tab", unlockedFish == 5, unlockedFish)
 
+-- With one tab open: what should leave it, one destination at a time.
+local dest, here, totalOut = guide.tabOutgoing(tidy, tbRanges, 1)
+check("an open tab's strays are found", totalOut == 2, totalOut)
+check("the first destination comes first", dest and dest.bankTab == 2 and #here == 1 and here[1].name == "Swordfish",
+    dest and dest.bankTab)
+local none, noItems, noneOut = guide.tabOutgoing(tidy, tbRanges, 4)
+check("a tidy tab has nothing to move out", none == nil and noItems == nil and noneOut == 0)
+
 -- A tab's first item is its icon, so it never moves.
 local iconBank = bankOf({ "Swordfish", "Rune platebody + 3", "Rune platelegs + 3", "Rune full helm + 3",
     "Trout", "Salmon", "Tuna" })

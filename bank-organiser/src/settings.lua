@@ -38,6 +38,7 @@ settings.SCHEMA = {
     { key = "minTabSize", type = "int", default = 5, min = 1, max = 30 },
     { key = "orderTabs", type = "bool", default = true },
     { key = "sortInside", type = "bool", default = true },
+    { key = "tabFocus", type = "bool", default = true },
     { key = "hoverTips", type = "bool", default = true },
     { key = "depositHelp", type = "bool", default = true },
     { key = "perCharacter", type = "bool", default = true },

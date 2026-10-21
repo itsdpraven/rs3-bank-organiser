@@ -34,6 +34,8 @@ one tab at a time, right on top of the real bank.
   bows, ores before bars, quest items by quest.
 - **Picks an icon for every tab** from your own items (the best weapon for
   Melee, your best food for Food & potions...) and shows you how to set it.
+- **Open any single tab** to tidy just that tab: what belongs elsewhere is
+  highlighted with the tab it goes to, then the tab is put in order (a setting).
 - **Point at any bank item** to see which tab it belongs in. Items in your
   backpack show the number of their tab, so you can deposit into the right
   place.
