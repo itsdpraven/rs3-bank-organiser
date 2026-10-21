@@ -21,7 +21,7 @@ On the RuneScape page on mod.io, click **Add plugin** (top right).
 |---|---|
 | Plugin name | `Bank Organiser` |
 | Summary | the *Summary* line from `LISTING.md` (ASCII, 10-250 characters) |
-| Plugin listing image | `listing-image.png` (1280x720, 16:9) |
+| Plugin listing image | `listing-image.png` (1920x1080, 16:9, 1.4 MB) |
 | Homepage | `https://github.com/itsdpraven/rs3-bank-organiser` |
 | Profile URL | `bank-organiser` |
 | Allow comments | your choice |

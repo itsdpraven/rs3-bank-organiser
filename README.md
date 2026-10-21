@@ -109,7 +109,7 @@ powershell -ExecutionPolicy Bypass -File tools/package-bank-organiser.ps1
 
 ## Legal
 
-Bank Organiser is a fan-made plugin and isn't made or endorsed by Jagex.
+Bank Organiser is a fan-made plugin and isn't made or endorsed by Jagex. Item images are from the [RuneScape Wiki](https://runescape.wiki).
 RuneScape is a trademark of Jagex Ltd. Plugins on the official Plugin Hub are
 provided under the [Jagex EULA](https://legal.jagex.com/docs/terms/eula), so
 this repository has no separate licence.
