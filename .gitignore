@@ -1,0 +1,10 @@
+# Build output
+dist/
+*.zip
+
+# Local research notes and reports (contain local paths)
+research_notes/
+reports/
+
+# A recorded real bank, kept private (the tests skip what needs it)
+bank-organiser/tests/fixtures/real_bank.lua

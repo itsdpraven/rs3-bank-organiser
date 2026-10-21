@@ -1,0 +1,7 @@
+{
+    "name": "Bank Organiser",
+    "version": "1.0.0",
+    "contactEmailAddress": "CHANGE-ME@example.com",
+    "hasRibbonIcon": true,
+    "hasSettingsIcon": true
+}
