@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bank Organiser · RuneScape 3 plugin</title>
+<meta name="description" content="A RuneScape 3 plugin that sorts your bank into sensible tabs, then puts every tab in order. It shows you what to move and where. You make every drag.">
+<link rel="canonical" href="https://itsdpraven.github.io/rs3-bank-organiser/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Bank Organiser · RuneScape 3 plugin">
+<meta property="og:description" content="Sorts your bank into sensible tabs, then puts every tab in order. Highlights what to move. You make every drag.">
+<meta property="og:url" content="https://itsdpraven.github.io/rs3-bank-organiser/">
+<meta property="og:image" content="https://itsdpraven.github.io/rs3-bank-organiser/img/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0b0805">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Mulish:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#">Bank Organiser</a>
+    <nav class="nav" aria-label="Sections">
+      <a class="optional" href="#how">How it works</a>
+      <a class="optional" href="#features">Features</a>
+      <a href="#faq">Q&amp;A</a>
+      <a href="#get">Get it</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <p class="kicker">RuneScape 3 plugin</p>
+      <h1 class="title">Bank<br>Organiser</h1>
+      <p class="lead">Sorts your whole bank into sensible tabs, then puts every tab in order. It highlights what to move and where, right on your bank. <strong>You make every drag.</strong></p>
+      <div class="buttons">
+        <a class="btn primary" href="#get">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>
+          Get it in the Plugin Hub
+        </a>
+        <a class="btn ghost" href="https://github.com/itsdpraven/rs3-bank-organiser">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>
+          Source on GitHub
+        </a>
+      </div>
+      <ul class="facts">
+        <li>Free</li>
+        <li>Requests no permissions</li>
+        <li>Never moves anything itself</li>
+      </ul>
+    </div>
+
+    <div>
+      <div class="bank panel" id="demo" role="img" aria-label="Illustration: the plugin highlights items in green, numbered in the order to drag them, and boxes the tab to drop them on in yellow. The items are dragged in, one by one.">
+        <div class="bank-title"><span id="demo-banner">Drag the 4 green items onto tab 3 (Food &amp; potions), in number order</span></div>
+        <div class="bank-tabs">
+          <div class="tab all">∞</div>
+          <div class="tab" data-tab="1"><img src="img/items/ring_of_duelling.png" alt=""><b class="badge tidy" data-start="tidy">1</b></div>
+          <div class="tab" data-tab="2"><img src="img/items/dragon_scimitar.png" alt=""><b class="badge tidy" data-start="tidy">2</b></div>
+          <div class="tab" data-tab="3"><img src="img/items/shark.png" alt=""><b class="badge">3</b></div>
+          <div class="tab" data-tab="4"><img src="img/items/clean_ranarr.png" alt=""><b class="badge tidy" data-start="tidy">4</b></div>
+          <div class="tab new" data-tab="5"><img src="img/items/magic_logs.png" alt=""><b class="badge">5</b></div>
+          <div class="tab plus" data-tab="plus">+</div>
+        </div>
+        <div class="bank-grid">
+          <div class="slot" data-item="hammer"><img src="img/items/hammer.png" alt=""></div>
+          <div class="slot" data-item="rocktail"><img src="img/items/rocktail.png" alt=""></div>
+          <div class="slot"><img src="img/items/nature_rune.png" alt=""></div>
+          <div class="slot" data-item="magiclogs"><img src="img/items/magic_logs.png" alt=""></div>
+          <div class="slot"><img src="img/items/coins_10000.png" alt=""></div>
+          <div class="slot" data-item="overload"><img src="img/items/overload_4.png" alt=""></div>
+          <div class="slot"><img src="img/items/santa_hat.png" alt=""></div>
+          <div class="slot"><img src="img/items/runite_ore.png" alt=""></div>
+          <div class="slot"><img src="img/items/blood_rune.png" alt=""></div>
+          <div class="slot"><img src="img/items/dragon_bones.png" alt=""></div>
+          <div class="slot" data-item="prayer"><img src="img/items/prayer_potion_4.png" alt=""></div>
+          <div class="slot" data-item="maplelogs"><img src="img/items/maple_logs.png" alt=""></div>
+          <div class="slot"><img src="img/items/clue_scroll_elite.png" alt=""></div>
+          <div class="slot"><img src="img/items/death_rune.png" alt=""></div>
+          <div class="slot"><img src="img/items/rune_bar.png" alt=""></div>
+          <div class="slot" data-item="restore"><img src="img/items/super_restore_4.png" alt=""></div>
+          <div class="slot"><img src="img/items/dragon_pickaxe.png" alt=""></div>
+          <div class="slot"><img src="img/items/hydrix.png" alt=""></div>
+          <div class="slot"><img src="img/items/mahogany_plank.png" alt=""></div>
+          <div class="slot"><img src="img/items/raw_shark.png" alt=""></div>
+          <div class="slot"><img src="img/items/spirit_wolf_pouch.png" alt=""></div>
+          <div class="slot"><img src="img/items/uncut_dragonstone.png" alt=""></div>
+          <div class="slot" data-item="whip"><img src="img/items/abyssal_whip.png" alt=""></div>
+          <div class="slot"><img src="img/items/rune_platebody.png" alt=""></div>
+        </div>
+      </div>
+      <p class="demo-caption">An illustration of what the plugin draws on your bank.</p>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <h2 class="title">How it works</h2>
+    <div class="rule"><i></i></div>
+    <p class="section-intro">Plugins aren't allowed to move items for you, so Bank Organiser shows you exactly what to do, one tab at a time, on top of the real bank. The colours always mean the same thing.</p>
+
+    <div class="legend">
+      <div class="panel">
+        <div class="swatch green"><img src="img/items/rocktail.png" alt=""></div>
+        <div><h3 class="g">Green: drag this</h3><p>Items to move now, numbered in the order to drag them.</p></div>
+      </div>
+      <div class="panel">
+        <div class="swatch yellow"><img src="img/items/shark.png" alt=""></div>
+        <div><h3 class="y">Yellow: drop it here</h3><p>The tab, the + button or the item to drop it on.</p></div>
+      </div>
+      <div class="panel">
+        <div class="swatch blue"><img src="img/items/crystal_key.png" alt=""></div>
+        <div><h3 class="b">Blue: click this</h3><p>Like the all-items tab, or the arrow that scrolls your tabs.</p></div>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="panel">
+        <div class="icon"><img src="img/items/archaeology_journal.png" alt=""></div>
+        <h3>Plan</h3>
+        <p>Reads your bank and works out where every item belongs, building on the tabs you already have.</p>
+      </div>
+      <div class="panel">
+        <div class="icon"><img src="img/items/rocktail.png" alt=""></div>
+        <h3>Move</h3>
+        <p>Drag the green items onto the yellow tab, in number order. The banner tells you if each one landed right.</p>
+      </div>
+      <div class="panel">
+        <div class="icon"><img src="img/items/lunar_staff.png" alt=""></div>
+        <h3>Order</h3>
+        <p>Drag your tabs into the plan's order, each with an icon that shows what it holds.</p>
+      </div>
+      <div class="panel">
+        <div class="icon"><img src="img/items/super_restore_4.png" alt=""></div>
+        <h3>Sort</h3>
+        <p>Put the items inside each tab in order: sets together, potions from 4 doses down to 1.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="plan">
+  <div class="wrap">
+    <h2 class="title">A bank that makes sense</h2>
+    <div class="rule"><i></i></div>
+    <p class="section-intro">The Recommended plan uses all 14 tabs. Small tabs join a related one, and tabs you already have are kept or reused, so as little as possible has to move.</p>
+    <div class="plan">
+      <figure><div class="slot"><span class="n">1</span><img src="img/items/ring_of_duelling.png" alt=""></div><figcaption>Teleports &amp; tools</figcaption></figure>
+      <figure><div class="slot"><span class="n">2</span><img src="img/items/dragon_scimitar.png" alt=""></div><figcaption>Melee</figcaption></figure>
+      <figure><div class="slot"><span class="n">3</span><img src="img/items/elder_shortbow.png" alt=""></div><figcaption>Ranged</figcaption></figure>
+      <figure><div class="slot"><span class="n">4</span><img src="img/items/lunar_staff.png" alt=""></div><figcaption>Magic</figcaption></figure>
+      <figure><div class="slot"><span class="n">5</span><img src="img/items/death_guard.png" alt=""></div><figcaption>Necromancy</figcaption></figure>
+      <figure><div class="slot"><span class="n">6</span><img src="img/items/amulet_of_glory.png" alt=""></div><figcaption>Jewellery &amp; other gear</figcaption></figure>
+      <figure><div class="slot"><span class="n">7</span><img src="img/items/shark.png" alt=""></div><figcaption>Food &amp; potions</figcaption></figure>
+      <figure><div class="slot"><span class="n">8</span><img src="img/items/clean_ranarr.png" alt=""></div><figcaption>Herblore &amp; farming</figcaption></figure>
+      <figure><div class="slot"><span class="n">9</span><img src="img/items/magic_logs.png" alt=""></div><figcaption>Gathering</figcaption></figure>
+      <figure><div class="slot"><span class="n">10</span><img src="img/items/hydrix.png" alt=""></div><figcaption>Crafting &amp; production</figcaption></figure>
+      <figure><div class="slot"><span class="n">11</span><img src="img/items/archaeology_journal.png" alt=""></div><figcaption>Archaeology</figcaption></figure>
+      <figure><div class="slot"><span class="n">12</span><img src="img/items/clue_scroll_elite.png" alt=""></div><figcaption>Quest items &amp; clues</figcaption></figure>
+      <figure><div class="slot"><span class="n">13</span><img src="img/items/blue_partyhat.png" alt=""></div><figcaption>Cosmetics &amp; outfits</figcaption></figure>
+      <figure><div class="slot"><span class="n">14</span><img src="img/items/crystal_key.png" alt=""></div><figcaption>Everything else</figcaption></figure>
+    </div>
+    <p class="plan-note">Or choose Compact, Skiller or Simple, or design your own tabs</p>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <h2 class="title">Your bank, your rules</h2>
+    <div class="rule"><i></i></div>
+    <div class="features">
+      <div class="panel">
+        <div class="head"><img src="img/items/mahogany_plank.png" alt=""><h3>Builds on your tabs</h3></div>
+        <p>Tabs that already fit are kept, tabs that fit nothing are reused, and a new tab is only suggested when it's needed. Nothing is deleted.</p>
+      </div>
+      <div class="panel">
+        <div class="head"><img src="img/items/rune_platebody.png" alt=""><h3>Every tab in order</h3></div>
+        <p>Gear by level with each set together, runes in the usual order, potions by type, herbs grimy to clean to unfinished, quest items by quest.</p>
+      </div>
+      <div class="panel">
+        <div class="head"><img src="img/items/dragon_scimitar.png" alt=""><h3>The right icon for every tab</h3></div>
+        <p>Picks the clearest item you own for each tab's icon (your best weapon for Melee, your best food for Food &amp; potions) and sets it first.</p>
+      </div>
+      <div class="panel">
+        <div class="head"><img src="img/items/hammer.png" alt=""><h3>Edit the plan</h3></div>
+        <p>Rename, move, add or delete tabs, choose which kinds of item each one holds, and send items to a tab by name or by pointing at them.</p>
+      </div>
+      <div class="panel">
+        <div class="head"><img src="img/items/crystal_key.png" alt=""><h3>Lock any tab</h3></div>
+        <p>A locked tab is left exactly as it is: nothing moves in or out, and it isn't sorted.</p>
+      </div>
+      <div class="panel">
+        <div class="head"><img src="img/items/shark.png" alt=""><h3>Tidy just one tab</h3></div>
+        <p>Open a single tab and the plugin works on that tab alone: what belongs elsewhere moves out, then the tab is put in order.</p>
+      </div>
+      <div class="panel">
+        <div class="head"><img src="img/items/nature_rune.png" alt=""><h3>Point at anything</h3></div>
+        <p>Hover over a bank item to see which tab it belongs in. Items in your backpack show their tab number, so you can deposit straight into the right place.</p>
+      </div>
+      <div class="panel">
+        <div class="head"><img src="img/items/runite_ore.png" alt=""><h3>Any size of bank</h3></div>
+        <p>If a tab is scrolled out of view, it points you to the arrow. In big tabs, items that have to travel further than fits on screen go part of the way first.</p>
+      </div>
+      <div class="panel">
+        <div class="head"><img src="img/items/coins_10000.png" alt=""><h3>Private by design</h3></div>
+        <p>Requests no permissions and sends nothing anywhere. Your plan and settings stay on your computer, kept separately for each character.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="order">
+  <div class="wrap">
+    <h2 class="title">How each tab is ordered</h2>
+    <div class="rule"><i></i></div>
+    <p class="section-intro">The tab's icon item comes first, then each kind of item in the order your plan lists them. Within each kind:</p>
+    <div class="order panel">
+      <dl>
+        <dt>Gear</dt><dd>By level, lowest first, each set together: weapon, off-hand, head, body, legs, hands, feet, shield, cape, neck, ring.</dd>
+        <dt>Runes</dt><dd>Elemental, then combination, then the rest, with Necromancy runes last.</dd>
+        <dt>Potions</dt><dd>Every dose of a potion together, from 4 doses down to 1.</dd>
+        <dt>Food</dt><dd>By how much it heals.</dd>
+        <dt>Herblore</dt><dd>Grimy herbs, clean herbs, unfinished potions, then the rest.</dd>
+        <dt>Skilling</dt><dd>In the order you use them (logs before bows, ores before bars), then by level.</dd>
+        <dt>Clues</dt><dd>Easy, medium, hard, elite, master.</dd>
+        <dt>Quest items</dt><dd>Grouped by quest.</dd>
+        <dt>Cosmetics</dt><dd>Grouped by outfit.</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<section id="get">
+  <div class="wrap">
+    <h2 class="title">Get Bank Organiser</h2>
+    <div class="rule"><i></i></div>
+    <div class="get">
+      <div class="panel">
+        <h3>Install</h3>
+        <ol>
+          <li>In RuneScape, open the Plugin Hub and search for <strong>Bank Organiser</strong>, or find it on mod.io.</li>
+          <li>Turn it on in the Plugin Hub's Manage tab.</li>
+          <li>Open your bank, then the plugin window from its ribbon icon.</li>
+          <li>Click the all-items tab and follow the banner on your bank.</li>
+        </ol>
+        <p class="note">Plugins appear in the Plugin Hub once Jagex has reviewed them.</p>
+        <div class="buttons">
+          <a class="btn primary" href="https://mod.io/g/runescape/m/bank-organiser">View on mod.io</a>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Source &amp; releases</h3>
+        <p>The full source, the tests and every release are on GitHub. Found a bug or have an idea? Open an issue there.</p>
+        <div class="buttons">
+          <a class="btn ghost" href="https://github.com/itsdpraven/rs3-bank-organiser">GitHub repository</a>
+          <a class="btn ghost" href="https://github.com/itsdpraven/rs3-bank-organiser/releases/latest">Latest release</a>
+          <a class="btn ghost" href="https://github.com/itsdpraven/rs3-bank-organiser/issues">Report a problem</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <h2 class="title">Questions &amp; answers</h2>
+    <div class="rule"><i></i></div>
+    <div class="faq">
+      <details class="panel" open>
+        <summary>Can it move the items for me?</summary>
+        <p>No. Plugins aren't allowed to act for you, so it shows you what to do and you make every drag. Each one is quick: the item to drag glows green and where it goes is boxed in yellow.</p>
+      </details>
+      <details class="panel">
+        <summary>Will it delete my tabs?</summary>
+        <p>No. It builds on the tabs you have: tabs that fit are kept, tabs that fit nothing are reused, and a new tab is only suggested when needed. A tab only goes when you've moved everything out of it.</p>
+      </details>
+      <details class="panel">
+        <summary>How does it decide where things go?</summary>
+        <p>Every item gets a kind (melee gear, runes, logs, quest items and so on) from the game's own item details: its Grand Exchange category, combat style and type. Your plan says which kinds share a tab, and you can change it.</p>
+      </details>
+      <details class="panel">
+        <summary>Why drag in number order?</summary>
+        <p>An item dropped on a tab goes to the end of it. Dragging in number order leaves the tab sorted already, so there's less to do afterwards.</p>
+      </details>
+      <details class="panel">
+        <summary>What does "part of the way" mean?</summary>
+        <p>In a big tab, an item and the place it goes can be further apart than fits on screen, so they can't be dragged in one go. Drop it on the yellow item part of the way, and it's asked for again from there.</p>
+      </details>
+      <details class="panel">
+        <summary>Can I stop and come back later?</summary>
+        <p>Yes. The plugin checks your bank after every change, so you can pause, skip a tab for now or close the bank and pick up where you left off.</p>
+      </details>
+      <details class="panel">
+        <summary>Does it work in other languages?</summary>
+        <p>Items are sorted using the game's item details, but some rules read English item names, so a few items may be misplaced if your game is set to another language. The plugin tells you if so.</p>
+      </details>
+      <details class="panel">
+        <summary>Is anything sent anywhere?</summary>
+        <p>No. The plugin requests no permissions. Your plan, settings and tab locks are saved only on your computer, and you can delete them from the plugin window at any time.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="links">
+      <a href="https://github.com/itsdpraven/rs3-bank-organiser">GitHub</a>
+      <a href="https://mod.io/g/runescape/m/bank-organiser">mod.io</a>
+      <a href="mailto:itsdpraven@proton.me">Contact</a>
+    </div>
+    <p>Bank Organiser is a fan-made plugin. It isn't made, endorsed or supported by Jagex. RuneScape is a trademark of Jagex Ltd.</p>
+    <p>Item pictures from the <a href="https://runescape.wiki/">RuneScape Wiki</a> (CC BY-NC-SA 3.0).</p>
+  </div>
+</footer>
+
+<script src="assets/site.js"></script>
+</body>
+</html>

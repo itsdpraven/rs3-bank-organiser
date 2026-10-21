@@ -9,6 +9,12 @@
   It shows you what to move and where. You make every drag.
 </p>
 
+<p align="center">
+  <a href="https://itsdpraven.github.io/rs3-bank-organiser/"><b>Website</b></a> ·
+  <a href="https://github.com/itsdpraven/rs3-bank-organiser/releases/latest">Latest release</a> ·
+  <a href="https://mod.io/g/runescape/m/bank-organiser">mod.io</a>
+</p>
+
 ---
 
 ## What it does
